@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>DeepAI Code Snippet</title><meta name="title" content="DeepAI Code Snippet"><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><style id="__livecodes_styles__"></style><script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" async=""></script><script type="importmap">{
+  "imports": {}
+}</script></head><body>
+
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💫 Lucky Number Sets Generator 💫</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
+    margin: 0;
+    padding: 40px;
+    color: #333;
+  }
+  h1 {
+    text-align: center;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+  }
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.85);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  }
+  label {
+    font-weight: bold;
+    font-size: 1.1em;
+  }
+  input[type="number"] {
+    width: 150px;
+    padding: 10px;
+    margin-left: 15px;
+    border-radius: 8px;
+    border: 2px solid #ccc;
+    font-size: 1em;
+    transition: border-color 0.3s;
+  }
+  input[type="number"]:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 8px rgba(0,123,255,0.5);
+  }
+  button {
+    background-color: #007bff;
+    color: #fff;
+    padding: 14px 25px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: background-color 0.3s, transform 0.2s;
+  }
+  button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+  }
+  h2 {
+    margin-top: 40px;
+    text-align: center;
+    color: #333;
+    font-size: 2em;
+  }
+  #results {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .set {
+    background: #fff;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    font-size: 1.2em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .set span {
+    font-weight: bold;
+  }
+  @media(max-width: 600px){
+    body {
+      padding: 20px;
+    }
+    .container {
+      padding: 20px;
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.2em;
+    }
+  }
+</style>
+
+
+<h1>💫 Lucky Number Sets Generator 💫</h1>
+<div class="container">
+  <div style="display:flex; align-items: center; justify-content: center; gap: 15px;">
+    <label for="totalSum">Enter Total Sum (21-279):</label>
+    <input type="number" id="totalSum" placeholder="e.g., 164" min="1" max="490">
+  </div>
+  <div style="text-align: center;">
+    <button id="generateSets">✨ Generate Sets ✨</button>
+  </div>
+  <h2>Generated Sets:</h2>
+  <div id="results"></div>
+</div>
+
+<script>
+const appState = {
+  frequencyMap: Array(49).fill(0),
+  recentSets: [],
+  totalSumTarget: null,
+};
+
+// Utility: get random number between min and max (inclusive)
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Generate a weighted number avoiding duplicates within a set
+function getWeightedUniqueNumber(excludeSet) {
+  let num;
+  do {
+    num = getRandomInt(1, 49);
+  } while (excludeSet.has(num));
+  return num;
+}
+
+// Generate a set of unique numbers of given count
+function getWeightedUniqueNumbers(count, excludeSet) {
+  const result = [];
+  while (result.length < count) {
+    const num = getWeightedUniqueNumber(excludeSet);
+    excludeSet.add(num);
+    result.push(num);
+  }
+  return result;
+}
+
+// Generate a regular set (without sum constraint)
+function generateRegularSet(excludeNumbers) {
+  const excludeSet = new Set(excludeNumbers);
+  const mainNumbers = getWeightedUniqueNumbers(6, excludeSet);
+  const additionalNumber = getWeightedUniqueNumber(excludeSet);
+  // Update frequency
+  mainNumbers.forEach(n => {
+    if (n >= 1 && n <= 49) appState.frequencyMap[n - 1]++;
+  });
+  if (additionalNumber >= 1 && additionalNumber <= 49)
+    appState.frequencyMap[additionalNumber - 1]++;
+  const key = mainNumbers.join(',') + '|' + additionalNumber;
+  return { mainNumbers, additionalNumber, key };
+}
+
+// Helper: get sampled combinations with sum
+function getSampledCombinationsWithSum(min, max, count, targetSum, excludeSet, maxSamples=10, maxAttempts=10000) {
+  const results = [];
+  let attempts = 0;
+  while (results.length < maxSamples && attempts < maxAttempts) {
+    attempts++;
+    const combo = getWeightedUniqueNumbers(count, new Set(excludeSet));
+    const sum = combo.reduce((a, b) => a + b, 0);
+    if (sum === targetSum) {
+      results.push(combo);
+    }
+  }
+  return results;
+}
+
+// Main generateSet function
+function generateSet() {
+  const excludeNumbers = new Set();
+  appState.recentSets.forEach(s => {
+    s.mainNumbers.forEach(n => excludeNumbers.add(n));
+    if (s.additionalNumber) excludeNumbers.add(s.additionalNumber);
+  });
+
+  const totalSumInput = document.getElementById('totalSum').value.trim();
+  const totalSum = parseInt(totalSumInput, 10);
+
+  // Validate total sum
+  if (isNaN(totalSum)) {
+    alert('Please enter a valid number for total sum.');
+    return;
+  }
+  if (totalSum < 21 || totalSum > 279) {
+    alert('Total sum must be between 21 and 279.');
+    return;
+  }
+
+  appState.totalSumTarget = totalSum;
+
+  // Generate sets that sum to totalSum
+  const samples = getSampledCombinationsWithSum(
+    1,
+    49,
+    6,
+    appState.totalSumTarget,
+    excludeNumbers,
+    10,
+    10000
+  );
+
+  if (samples.length === 0) {
+    alert('No combinations found for the specified sum.');
+    return;
+  }
+
+  // Pick up to 10 from samples
+  const setsToShow = samples.slice(0, 10);
+  const generatedSets = [];
+
+  setsToShow.forEach(mainNumbers => {
+    const excludeSet = new Set(excludeNumbers);
+    mainNumbers.forEach(n => excludeSet.add(n));
+    const additionalNumber = getWeightedUniqueNumber(excludeSet);
+
+    // Update frequency
+    mainNumbers.forEach(n => {
+      if (n >= 1 && n <= 49) appState.frequencyMap[n - 1]++;
+    });
+    if (additionalNumber >= 1 && additionalNumber <= 49)
+      appState.frequencyMap[additionalNumber - 1]++;
+    
+    const key = mainNumbers.join(',') + '|' + additionalNumber;
+    generatedSets.push({ mainNumbers, additionalNumber, key });
+  });
+
+  displayResults(generatedSets);
+  appState.recentSets = generatedSets;
+}
+
+// Display the generated sets
+function displayResults(sets) {
+  const resultsDiv = document.getElementById('results');
+  resultsDiv.innerHTML = '';
+  sets.forEach((set, index) => {
+    const div = document.createElement('div');
+    div.className = 'set';
+    div.innerHTML = `
+      <div><span>Set ${index + 1}:</span> ${set.mainNumbers.join(', ')} | <span>Extra:</span> ${set.additionalNumber}</div>
+    `;
+    resultsDiv.appendChild(div);
+  });
+}
+
+// Add event listener to the button
+document.getElementById('generateSets').addEventListener('click', generateSet);
+</script>
+
+<script></script></body></html>
