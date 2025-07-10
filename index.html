@@ -1,12 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" class=""><head><script>window.livecodes = window.livecodes || {};</script><title>DeepAI Code Snippet</title><meta name="title" content="DeepAI Code Snippet"><meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><style id="__livecodes_styles__"></style><script src="https://cdn.jsdelivr.net/npm/es-module-shims@1.10.0/dist/es-module-shims.js" async=""></script><script type="importmap">{
-  "imports": {}
-}</script></head><body>
-
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>💫 Lucky Number Sets Generator 💫</title>
 <style>
   body {
@@ -103,13 +99,13 @@
     }
   }
 </style>
-
-
+</head>
+<body>
 <h1>💫 Lucky Number Sets Generator 💫</h1>
 <div class="container">
   <div style="display:flex; align-items: center; justify-content: center; gap: 15px;">
-    <label for="totalSum">Enter Total Sum (21-279):</label>
-    <input type="number" id="totalSum" placeholder="e.g., 164" min="1" max="490">
+    <label for="totalSum">Enter Total Sum:</label>
+    <input type="number" id="totalSum" placeholder="e.g., 164" min="1" max="490"/>
   </div>
   <div style="text-align: center;">
     <button id="generateSets">✨ Generate Sets ✨</button>
@@ -190,57 +186,53 @@ function generateSet() {
 
   const totalSumInput = document.getElementById('totalSum').value.trim();
   const totalSum = parseInt(totalSumInput, 10);
+  appState.totalSumTarget = isNaN(totalSum) ? null : totalSum;
 
-  // Validate total sum
-  if (isNaN(totalSum)) {
-    alert('Please enter a valid number for total sum.');
-    return;
-  }
-  if (totalSum < 21 || totalSum > 279) {
-    alert('Total sum must be between 21 and 279.');
-    return;
-  }
+  if (appState.totalSumTarget !== null) {
+    // Generate sets that sum to totalSum
+    const samples = getSampledCombinationsWithSum(
+      1,
+      49,
+      6,
+      appState.totalSumTarget,
+      excludeNumbers,
+      10,
+      10000
+    );
 
-  appState.totalSumTarget = totalSum;
+    if (samples.length === 0) {
+      alert('No combinations found for the specified sum.');
+      return;
+    }
 
-  // Generate sets that sum to totalSum
-  const samples = getSampledCombinationsWithSum(
-    1,
-    49,
-    6,
-    appState.totalSumTarget,
-    excludeNumbers,
-    10,
-    10000
-  );
+    // Pick up to 10 from samples
+    const setsToShow = samples.slice(0, 10);
+    const generatedSets = [];
 
-  if (samples.length === 0) {
-    alert('No combinations found for the specified sum.');
-    return;
-  }
+    setsToShow.forEach(mainNumbers => {
+      const excludeSet = new Set(excludeNumbers);
+      mainNumbers.forEach(n => excludeSet.add(n));
+      const additionalNumber = getWeightedUniqueNumber(excludeSet);
 
-  // Pick up to 10 from samples
-  const setsToShow = samples.slice(0, 10);
-  const generatedSets = [];
-
-  setsToShow.forEach(mainNumbers => {
-    const excludeSet = new Set(excludeNumbers);
-    mainNumbers.forEach(n => excludeSet.add(n));
-    const additionalNumber = getWeightedUniqueNumber(excludeSet);
-
-    // Update frequency
-    mainNumbers.forEach(n => {
-      if (n >= 1 && n <= 49) appState.frequencyMap[n - 1]++;
+      // Update frequency
+      mainNumbers.forEach(n => {
+        if (n >= 1 && n <= 49) appState.frequencyMap[n - 1]++;
+      });
+      if (additionalNumber >= 1 && additionalNumber <= 49)
+        appState.frequencyMap[additionalNumber - 1]++;
+      
+      const key = mainNumbers.join(',') + '|' + additionalNumber;
+      generatedSets.push({ mainNumbers, additionalNumber, key });
     });
-    if (additionalNumber >= 1 && additionalNumber <= 49)
-      appState.frequencyMap[additionalNumber - 1]++;
-    
-    const key = mainNumbers.join(',') + '|' + additionalNumber;
-    generatedSets.push({ mainNumbers, additionalNumber, key });
-  });
 
-  displayResults(generatedSets);
-  appState.recentSets = generatedSets;
+    displayResults(generatedSets);
+    appState.recentSets = generatedSets;
+  } else {
+    // No sum constraint, generate a normal set
+    const result = generateRegularSet(excludeNumbers);
+    displayResults([result]);
+    appState.recentSets = [result];
+  }
 }
 
 // Display the generated sets
@@ -260,5 +252,5 @@ function displayResults(sets) {
 // Add event listener to the button
 document.getElementById('generateSets').addEventListener('click', generateSet);
 </script>
-
-<script></script></body></html>
+</body>
+</html>
