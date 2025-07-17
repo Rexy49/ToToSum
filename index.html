@@ -178,6 +178,7 @@ function getSampledCombinationsWithSum(min, max, count, targetSum, excludeSet, m
 
 // Main generateSet function
 function generateSet() {
+  console.log('Generate set triggered');
   const excludeNumbers = new Set();
   appState.recentSets.forEach(s => {
     s.mainNumbers.forEach(n => excludeNumbers.add(n));
@@ -187,6 +188,12 @@ function generateSet() {
   const totalSumInput = document.getElementById('totalSum').value.trim();
   const totalSum = parseInt(totalSumInput, 10);
   appState.totalSumTarget = isNaN(totalSum) ? null : totalSum;
+
+  console.log('Total sum input:', totalSum);
+  console.log('Parsed total sum:', appState.totalSumTarget);
+
+  // Clear previous results each time
+  document.getElementById('results').innerHTML = '';
 
   if (appState.totalSumTarget !== null) {
     // Generate sets that sum to totalSum
@@ -227,6 +234,7 @@ function generateSet() {
 
     displayResults(generatedSets);
     appState.recentSets = generatedSets;
+
   } else {
     // No sum constraint, generate a normal set
     const result = generateRegularSet(excludeNumbers);
@@ -249,8 +257,11 @@ function displayResults(sets) {
   });
 }
 
-// Add event listener to the button
-document.getElementById('generateSets').addEventListener('click', generateSet);
+// Attach event listener
+document.getElementById('generateSets').addEventListener('click', () => {
+  console.log('Button clicked');
+  generateSet();
+});
 </script>
 </body>
 </html>
