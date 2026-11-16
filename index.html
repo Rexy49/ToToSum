@@ -2,266 +2,384 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>💫 Lucky Number Sets Generator 💫</title>
 <style>
+  :root {
+    --bg1: #74ebd5; --bg2: #ACB6E5;
+    --card: rgba(255,255,255,0.92);
+    --text: #222; --muted: #555;
+    --primary: #007bff; --primary-hover: #0056b3;
+    --border: #ccc;
+    --shadow: 0 8px 20px rgba(0,0,0,0.15);
+  }
+  html[data-theme="dark"] {
+    --bg1: #1e2a44; --bg2: #0f172a;
+    --card: rgba(30,41,59,0.92);
+    --text: #e2e8f0; --muted: #94a3b8;
+    --primary: #3b82f6; --primary-hover: #2563eb;
+    --border: #475569;
+    --shadow: 0 8px 20px rgba(0,0,0,0.5);
+  }
+  * { box-sizing: border-box; }
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%);
-    margin: 0;
-    padding: 40px;
-    color: #333;
+    background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 100%);
+    min-height: 100vh; margin: 0; padding: 40px 20px;
+    color: var(--text);
   }
   h1 {
-    text-align: center;
-    font-size: 2.5em;
-    margin-bottom: 10px;
-    color: #fff;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    text-align: center; font-size: clamp(1.6em, 4vw, 2.5em);
+    margin: 0 0 20px; color: #fff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.25);
   }
   .container {
-    max-width: 700px;
-    margin: 0 auto;
-    background: rgba(255, 255, 255, 0.85);
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    max-width: 720px; margin: 0 auto;
+    background: var(--card); padding: 30px;
+    border-radius: 15px; box-shadow: var(--shadow);
   }
-  label {
-    font-weight: bold;
-    font-size: 1.1em;
+  .toolbar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 10px; }
+  .icon-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text); padding: 6px 12px; border-radius: 8px;
+    cursor: pointer; font-size: 0.9em;
   }
+  .icon-btn:hover { background: rgba(0,0,0,0.06); }
+  .form-row {
+    display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: center; gap: 12px; margin-bottom: 16px;
+  }
+  label { font-weight: 600; font-size: 1.05em; }
   input[type="number"] {
-    width: 150px;
-    padding: 10px;
-    margin-left: 15px;
-    border-radius: 8px;
-    border: 2px solid #ccc;
-    font-size: 1em;
-    transition: border-color 0.3s;
+    width: 160px; padding: 10px 12px; border-radius: 8px;
+    border: 2px solid var(--border); font-size: 1em;
+    background: transparent; color: var(--text);
   }
   input[type="number"]:focus {
-    border-color: #007bff;
-    outline: none;
-    box-shadow: 0 0 8px rgba(0,123,255,0.5);
+    border-color: var(--primary); outline: none;
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
   }
-  button {
-    background-color: #007bff;
-    color: #fff;
-    padding: 14px 25px;
-    margin-top: 20px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 1.1em;
-    transition: background-color 0.3s, transform 0.2s;
+  .hint { font-size: 0.85em; color: var(--muted); text-align: center; margin: -6px 0 12px; }
+  .actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+  button.primary {
+    background: var(--primary); color: #fff;
+    padding: 12px 22px; border: none; border-radius: 10px;
+    cursor: pointer; font-size: 1.05em; font-weight: 600;
+    transition: background 0.25s, transform 0.15s;
   }
-  button:hover {
-    background-color: #0056b3;
-    transform: translateY(-2px);
-  }
-  h2 {
-    margin-top: 40px;
-    text-align: center;
-    color: #333;
-    font-size: 2em;
-  }
-  #results {
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
+  button.primary:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); }
+  button.primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  h2 { margin: 32px 0 12px; text-align: center; font-size: clamp(1.3em, 3vw, 1.8em); }
+  #error { color: #dc2626; text-align: center; font-weight: 600; min-height: 1.2em; margin: 8px 0; }
+  #results { display: flex; flex-direction: column; gap: 12px; }
   .set {
-    background: #fff;
-    padding: 15px 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    font-size: 1.2em;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    background: var(--card); border: 1px solid var(--border);
+    padding: 14px 18px; border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; flex-wrap: wrap;
   }
-  .set span {
-    font-weight: bold;
+  .set .numbers { font-size: 1.15em; letter-spacing: 0.5px; }
+  .set .numbers .label { color: var(--muted); font-size: 0.85em; margin-right: 4px; }
+  .set .numbers .extra {
+    display: inline-block; margin-left: 6px; padding: 2px 8px;
+    border-radius: 6px; background: rgba(0,123,255,0.12);
+    color: var(--primary); font-weight: 600;
   }
-  @media(max-width: 600px){
-    body {
-      padding: 20px;
-    }
-    .container {
-      padding: 20px;
-    }
-    button {
-      width: 100%;
-      padding: 15px;
-      font-size: 1.2em;
-    }
+  .set .meta { font-size: 0.85em; color: var(--muted); }
+  .set .copy-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text); padding: 5px 10px; border-radius: 6px;
+    font-size: 0.85em; cursor: pointer;
+  }
+  .set .copy-btn:hover { background: rgba(0,0,0,0.05); }
+  @media (max-width: 600px) {
+    body { padding: 20px 12px; }
+    .container { padding: 20px; }
+    button.primary { width: 100%; }
+    input[type="number"] { width: 100%; }
+    .form-row { flex-direction: column; align-items: stretch; }
   }
 </style>
 </head>
 <body>
 <h1>💫 Lucky Number Sets Generator 💫</h1>
-<div class="container">
-  <div style="display:flex; align-items: center; justify-content: center; gap: 15px;">
-    <label for="totalSum">Enter Total Sum:</label>
-    <input type="number" id="totalSum" placeholder="e.g., 164" min="1" max="490"/>
+
+<main class="container">
+  <div class="toolbar">
+    <button class="icon-btn" id="themeToggle" type="button">🌙 Dark</button>
   </div>
-  <div style="text-align: center;">
-    <button id="generateSets">✨ Generate Sets ✨</button>
+
+  <div class="form-row">
+    <label for="totalSum">Total Sum (optional):</label>
+    <input type="number" id="totalSum" placeholder="e.g., 164" min="21" max="279" inputmode="numeric" />
   </div>
+  <p class="hint">Leave blank for random sets. With a sum, valid range is 21–279.</p>
+
+  <div class="actions">
+    <button class="primary" id="generateBtn" type="button">✨ Generate Sets ✨</button>
+  </div>
+
+  <p id="error" role="alert" aria-live="assertive"></p>
+
   <h2>Generated Sets:</h2>
-  <div id="results"></div>
-</div>
+  <div id="results" aria-live="polite"></div>
+</main>
 
 <script>
-const appState = {
-  frequencyMap: Array(49).fill(0),
-  recentSets: [],
-  totalSumTarget: null,
-};
+(function () {
+  'use strict';
 
-// Utility: get random number between min and max (inclusive)
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+  // ---- Tiny helpers ----
+  var $ = function (id) { return document.getElementById(id); };
+  var NUMBERS_PER_SET = 6;
+  var SETS_TO_GENERATE = 10;
+  var MIN_SUM = 21;   // 1+2+3+4+5+6
+  var MAX_SUM = 279;  // 44+45+46+47+48+49
 
-// Generate a weighted number avoiding duplicates within a set
-function getWeightedUniqueNumber(excludeSet) {
-  let num;
-  do {
-    num = getRandomInt(1, 49);
-  } while (excludeSet.has(num));
-  return num;
-}
+  var freq = new Array(49).fill(0); // how often each number 1..49 has appeared
+  var theme = 'light';
 
-// Generate a set of unique numbers of given count
-function getWeightedUniqueNumbers(count, excludeSet) {
-  const result = [];
-  while (result.length < count) {
-    const num = getWeightedUniqueNumber(excludeSet);
-    excludeSet.add(num);
-    result.push(num);
-  }
-  return result;
-}
+  function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 
-// Generate a regular set (without sum constraint)
-function generateRegularSet(excludeNumbers) {
-  const excludeSet = new Set(excludeNumbers);
-  const mainNumbers = getWeightedUniqueNumbers(6, excludeSet);
-  const additionalNumber = getWeightedUniqueNumber(excludeSet);
-  // Update frequency
-  mainNumbers.forEach(n => {
-    if (n >= 1 && n <= 49) appState.frequencyMap[n - 1]++;
-  });
-  if (additionalNumber >= 1 && additionalNumber <= 49)
-    appState.frequencyMap[additionalNumber - 1]++;
-  const key = mainNumbers.join(',') + '|' + additionalNumber;
-  return { mainNumbers, additionalNumber, key };
-}
-
-// Helper: get sampled combinations with sum
-function getSampledCombinationsWithSum(min, max, count, targetSum, excludeSet, maxSamples=10, maxAttempts=10000) {
-  const results = [];
-  let attempts = 0;
-  while (results.length < maxSamples && attempts < maxAttempts) {
-    attempts++;
-    const combo = getWeightedUniqueNumbers(count, new Set(excludeSet));
-    const sum = combo.reduce((a, b) => a + b, 0);
-    if (sum === targetSum) {
-      results.push(combo);
+  function weightedPickFrom(pool) {
+    if (!pool.length) return rand(1, 49);
+    var weights = pool.map(function (n) {
+      var f = freq[n - 1] || 0;
+      return 1 + (f === 0 ? 10 : 1 / f);
+    });
+    var total = weights.reduce(function (a, b) { return a + b; }, 0);
+    var r = Math.random() * total;
+    for (var i = 0; i < pool.length; i++) {
+      r -= weights[i];
+      if (r <= 0) return pool[i];
     }
+    return pool[pool.length - 1];
   }
-  return results;
-}
 
-// Main generateSet function
-function generateSet() {
-  console.log('Generate set triggered');
-  const excludeNumbers = new Set();
-  appState.recentSets.forEach(s => {
-    s.mainNumbers.forEach(n => excludeNumbers.add(n));
-    if (s.additionalNumber) excludeNumbers.add(s.additionalNumber);
-  });
+  // ---- Find combos summing to target ----
+  function findCombinationsWithSum(target, exclude, limit) {
+    limit = limit || 10;
+    // Pass 1: avoid excluded numbers. Pass 2: allow everything.
+    var passes = [exclude, new Set()];
+    for (var p = 0; p < passes.length; p++) {
+      var excluded = passes[p];
+      var pool = [];
+      for (var n = 1; n <= 49; n++) if (!excluded.has(n)) pool.push(n);
+      if (pool.length < NUMBERS_PER_SET) continue;
 
-  const totalSumInput = document.getElementById('totalSum').value.trim();
-  const totalSum = parseInt(totalSumInput, 10);
-  appState.totalSumTarget = isNaN(totalSum) ? null : totalSum;
+      var poolSet = new Set(pool);
+      var results = [];
+      var seen = new Set();
 
-  console.log('Total sum input:', totalSum);
-  console.log('Parsed total sum:', appState.totalSumTarget);
+      (function recurse(start, slots, remainingSum, chosen) {
+        if (results.length >= limit) return;
 
-  // Clear previous results each time
-  document.getElementById('results').innerHTML = '';
+        if (slots === 1) {
+          var last = remainingSum;
+          if (last < 1 || last > 49) return;
+          if (!poolSet.has(last)) return;
+          if (chosen.indexOf(last) !== -1) return;
+          var full = chosen.concat([last]).sort(function (a, b) { return a - b; });
+          var key = full.join(',');
+          if (!seen.has(key)) { seen.add(key); results.push(full); }
+          return;
+        }
 
-  if (appState.totalSumTarget !== null) {
-    // Generate sets that sum to totalSum
-    const samples = getSampledCombinationsWithSum(
-      1,
-      49,
-      6,
-      appState.totalSumTarget,
-      excludeNumbers,
-      10,
-      10000
-    );
+        // Safe pruning: min/max sum from this point using smallest/largest remaining numbers.
+        var minFromHere = 0, maxFromHere = 0;
+        for (var k = 0; k < slots; k++) {
+          minFromHere += (start + k);
+          maxFromHere += (49 - k);
+        }
+        if (remainingSum < minFromHere || remainingSum > maxFromHere) return;
 
-    if (samples.length === 0) {
-      alert('No combinations found for the specified sum.');
+        for (var i = start; i <= 49 - slots + 1; i++) {
+          if (results.length >= limit) return;
+          if (!poolSet.has(i)) continue;
+          // Quick prune: after picking i, the remaining slots need at least
+          // (i+1) + (i+2) + ... and at most 49 + 48 + ...
+          var minRest = 0, maxRest = 0;
+          for (var q = 1; q < slots; q++) {
+            minRest += (i + q);
+            maxRest += (49 - q + 1);
+          }
+          var need = remainingSum - i;
+          if (need < minRest || need > maxRest) continue;
+          chosen.push(i);
+          recurse(i + 1, slots - 1, need, chosen);
+          chosen.pop();
+        }
+      })(0, NUMBERS_PER_SET, target, []);
+
+      if (results.length > 0) return results;
+    }
+    return [];
+  }
+
+  // ---- Random set (no sum) ----
+  function randomSet(exclude) {
+    var pool = [];
+    for (var n = 1; n <= 49; n++) if (!exclude.has(n)) pool.push(n);
+    if (pool.length < 7) {
+      pool = [];
+      for (var m = 1; m <= 49; m++) pool.push(m);
+    }
+    var main = [];
+    while (main.length < NUMBERS_PER_SET) {
+      var candidates = pool.filter(function (x) { return main.indexOf(x) === -1; });
+      var pick = weightedPickFrom(candidates);
+      main.push(pick);
+    }
+    var extras = pool.filter(function (x) { return main.indexOf(x) === -1; });
+    var extra = extras.length ? weightedPickFrom(extras) : rand(1, 49);
+    return { main: main.sort(function (a, b) { return a - b; }), extra: extra };
+  }
+
+  // ---- Generate ----
+  function generate() {
+    var errorEl = $('error');
+    var resultsEl = $('results');
+    var btn = $('generateBtn');
+    errorEl.textContent = '';
+    resultsEl.innerHTML = '';
+
+    var raw = ($('totalSum').value || '').trim();
+    var target = raw === '' ? null : parseInt(raw, 10);
+
+    if (target !== null && (isNaN(target) || target < MIN_SUM || target > MAX_SUM)) {
+      errorEl.textContent = 'Please enter a sum between ' + MIN_SUM + ' and ' + MAX_SUM + ', or leave blank.';
       return;
     }
 
-    // Pick up to 10 from samples
-    const setsToShow = samples.slice(0, 10);
-    const generatedSets = [];
+    btn.disabled = true;
+    btn.textContent = '⏳ Generating…';
 
-    setsToShow.forEach(mainNumbers => {
-      const excludeSet = new Set(excludeNumbers);
-      mainNumbers.forEach(n => excludeSet.add(n));
-      const additionalNumber = getWeightedUniqueNumber(excludeSet);
+    setTimeout(function () {
+      try {
+        var exclude = new Set();
+        var sets = [];
 
-      // Update frequency
-      mainNumbers.forEach(n => {
-        if (n >= 1 && n <= 49) appState.frequencyMap[n - 1]++;
-      });
-      if (additionalNumber >= 1 && additionalNumber <= 49)
-        appState.frequencyMap[additionalNumber - 1]++;
-      
-      const key = mainNumbers.join(',') + '|' + additionalNumber;
-      generatedSets.push({ mainNumbers, additionalNumber, key });
-    });
+        if (target !== null) {
+          var combos = findCombinationsWithSum(target, exclude, SETS_TO_GENERATE);
+          if (combos.length === 0) {
+            errorEl.textContent = 'No valid combination sums to ' + target + '. Try another sum or clear the field.';
+            btn.disabled = false;
+            btn.textContent = '✨ Generate Sets ✨';
+            return;
+          }
+          combos.forEach(function (main) {
+            var used = new Set(exclude);
+            main.forEach(function (n) { used.add(n); });
+            var pool = [];
+            for (var n = 1; n <= 49; n++) if (!used.has(n)) pool.push(n);
+            var extra = pool.length ? weightedPickFrom(pool) : rand(1, 49);
+            sets.push({ main: main, extra: extra });
+          });
+        } else {
+          for (var i = 0; i < SETS_TO_GENERATE; i++) sets.push(randomSet(exclude));
+        }
 
-    displayResults(generatedSets);
-    appState.recentSets = generatedSets;
+        sets.forEach(function (s) {
+          s.main.concat([s.extra]).forEach(function (n) {
+            if (n >= 1 && n <= 49) freq[n - 1]++;
+          });
+        });
 
-  } else {
-    // No sum constraint, generate a normal set
-    const result = generateRegularSet(excludeNumbers);
-    displayResults([result]);
-    appState.recentSets = [result];
+        renderSets(sets, target);
+      } catch (err) {
+        errorEl.textContent = 'Something went wrong: ' + err.message;
+        // eslint-disable-next-line no-console
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ Generate Sets ✨';
+      }
+    }, 10);
   }
-}
 
-// Display the generated sets
-function displayResults(sets) {
-  const resultsDiv = document.getElementById('results');
-  resultsDiv.innerHTML = '';
-  sets.forEach((set, index) => {
-    const div = document.createElement('div');
-    div.className = 'set';
-    div.innerHTML = `
-      <div><span>Set ${index + 1}:</span> ${set.mainNumbers.join(', ')} | <span>Extra:</span> ${set.additionalNumber}</div>
-    `;
-    resultsDiv.appendChild(div);
-  });
-}
+  // ---- Render ----
+  function renderSets(sets, target) {
+    var container = $('results');
+    container.innerHTML = '';
 
-// Attach event listener
-document.getElementById('generateSets').addEventListener('click', () => {
-  console.log('Button clicked');
-  generateSet();
-});
+    sets.forEach(function (set, i) {
+      var sum = set.main.reduce(function (a, b) { return a + b; }, 0);
+      var card = document.createElement('div');
+      card.className = 'set';
+      card.innerHTML =
+        '<div class="numbers">' +
+          '<span class="label">Set ' + (i + 1) + ':</span> ' +
+          set.main.join(' · ') +
+          '<span class="extra">Extra ' + set.extra + '</span>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<span class="meta">Sum: ' + sum + (target !== null ? ' / ' + target : '') + '</span>' +
+          '<button class="copy-btn" type="button">📋 Copy</button>' +
+        '</div>';
+
+      card.querySelector('.copy-btn').addEventListener('click', function (e) {
+        var b = e.currentTarget;
+        var text = set.main.join(', ') + ' | Extra: ' + set.extra;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text);
+          } else {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+          }
+          b.textContent = '✅ Copied';
+          setTimeout(function () { b.textContent = '📋 Copy'; }, 1200);
+        } catch (err) {
+          b.textContent = '❌ Failed';
+          setTimeout(function () { b.textContent = '📋 Copy'; }, 1200);
+        }
+      });
+
+      container.appendChild(card);
+    });
+  }
+
+  // ---- Theme ----
+  function applyTheme(t) {
+    theme = t;
+    document.documentElement.setAttribute('data-theme', t);
+    var btn = $('themeToggle');
+    if (btn) btn.textContent = t === 'dark' ? '☀️ Light' : '🌙 Dark';
+    try { localStorage.setItem('lucky-theme', t); } catch (e) { /* ignore */ }
+  }
+
+  // ---- Wire up (with safety) ----
+  function init() {
+    var btn = $('generateBtn');
+    if (!btn) { console.error('generateBtn not found'); return; }
+    btn.addEventListener('click', generate);
+
+    var themeBtn = $('themeToggle');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', function () {
+        applyTheme(theme === 'dark' ? 'light' : 'dark');
+      });
+    }
+
+    var saved = 'light';
+    try { saved = localStorage.getItem('lucky-theme') || 'light'; } catch (e) { /* ignore */ }
+    applyTheme(saved);
+
+    // sanity check
+    console.log('Lucky Numbers ready. Test:', findCombinationsWithSum(164, new Set(), 3));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 </script>
 </body>
 </html>
